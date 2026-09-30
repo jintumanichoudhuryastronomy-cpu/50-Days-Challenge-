@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>50-Day Challenge Dashboard</title>
+  
+  <link rel="manifest" href="data:application/manifest+json,{
+    %22short_name%22:%2250DayApp%22,
+    %22name%22:%2250-Day Challenge Dashboard%22,
+    %22start_url%22:%22.%22,
+    %22background_color%22:%22%230a0817%22,
+    %22theme_color%22:%22%2313102b%22,
+    %22display%22:%22standalone%22,
+    %22icons%22:[{%22src%22:%22icon.png%22,%22type%22:%22image/png%22,%22sizes%22:%22192x192%22}]
+  }">
+  <meta name="theme-color" content="#13102b">
+  <link rel="icon" type="image/png" href="icon.png">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-dark: #0a0817;
+      --card-bg: #13102b;
+      --card-inner: #1c183d;
+      --accent-purple: #7c3aed;
+      --accent-orange: #f97316;
+      --text-main: #ffffff;
+      --text-sub: #9ca3af;
+      --border-color: #27234e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding-bottom: 80px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .container { padding: 16px; }
+
+    .hero-card {
+      background: linear-gradient(180deg, rgba(124, 58, 237, 0.15) 0%, rgba(19, 16, 43, 1) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 20px;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .progress-circle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 80px;
+      height: 80px;
+    }
+
+    .progress-circle svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .progress-circle circle {
+      fill: none;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+
+    .progress-bg { stroke: var(--card-inner); }
+    .progress-val {
+      stroke: var(--accent-purple);
+      stroke-dasharray: 226;
+      stroke-dashoffset: 226;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+
+    .circle-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .day-title { font-size: 38px; font-weight: 800; }
+    .date-sub { color: #f3a073; font-size: 14px; margin-top: 4px; }
+    .tagline { color: var(--text-sub); font-size: 12px; margin-top: 6px; }
+
+    .status-box {
+      background-color: var(--card-inner);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #d1d5db;
+    }
+
+    .days-grid {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+
+    .day-pill {
+      min-width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .day-pill.active {
+      background: linear-gradient(135deg, #f97316 0%, #d946ef 100%);
+      border: none;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+
+    .stat-item h4 { color: var(--text-sub); font-size: 12px; font-weight: 400; }
+    .stat-item p { font-size: 22px; font-weight: bold; margin-top: 4px; }
+
+    .item-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card-inner);
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+
+    .btn-orange {
+      background-color: var(--accent-orange);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-purple {
+      background-color: var(--accent-purple);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      width: 100%;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-danger {
+      background-color: #ef444422;
+      color: #ef4444;
+      border: 1px solid #ef4444;
+      padding: 12px;
+      border-radius: 10px;
+      width: 100%;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .navbar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-sub);
+      font-size: 10px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .nav-item.active { color: var(--accent-orange); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .journey-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .dot {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--card-inner);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: var(--text-sub);
+    }
+    .dot.filled { background: var(--accent-purple); color: white; }
+  </style>
+</head><body>
+
+  <div class="container">
+
+    <div id="tab-today" class="tab-content active">
+      <div class="hero-card">
+        <div style="font-size: 12px; color: var(--text-sub);">Reviewing</div>
+        <div class="day-title">Day <span id="current-day-num">1</span> <span style="font-size:18px; color:var(--text-sub);">/ 50</span></div>
+        <div class="date-sub" id="current-date-text">Today</div>
+        <div class="tagline">1% better every day</div>
+
+        <div class="progress-circle">
+          <svg>
+            <circle class="progress-bg" cx="40" cy="40" r="36"></circle>
+            <circle class="progress-val" id="main-progress-bar" cx="40" cy="40" r="36"></circle>
+          </svg>
+          <div class="circle-text" id="main-progress-text">0%</div>
+        </div>
+
+        <div class="status-box" id="status-message">
+          Mission active! Har din ka task complete karo.
+        </div>
+      </div>
+
+      <div class="days-grid" id="days-carousel"></div>
+
+      <div class="card">
+        <div class="stats-row">
+          <div class="stat-item"><h4>Routine</h4><p id="stat-routine">0%</p></div>
+          <div class="stat-item"><h4>To-do</h4><p id="stat-todo">0%</p></div>
+          <div class="stat-item"><h4>Habits</h4><p id="stat-habits">0%</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Daily routine</div>
+        <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 12px;">Time aur task edit kar sakte ho.</div>
+        <div class="item-list" id="routine-list"></div>
+        <button class="btn-purple" onclick="addRoutineItem()">+ Add to routine</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">To-do for Day <span class="dyn-day">1</span></div>
+        <div style="display:flex; gap:8px; margin-bottom: 12px;">
+          <input type="text" id="todo-input" placeholder="Naya kaam likho" style="flex:1; padding:10px; border-radius:10px; border:1px solid var(--border-color); background:var(--card-inner); color:white;">
+          <button class="btn-orange" onclick="addTodo()">Add</button>
+        </div>
+        <div class="item-list" id="todo-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Notes</div>
+        <textarea id="notes-input" style="width:100%; height:80px; background:var(--card-inner); border:1px solid var(--border-color); border-radius:10px; color:white; padding:10px;" placeholder="Aaj kya seekha?" oninput="saveNotes()"></textarea>
+      </div>
+    </div>
+
+    <div id="tab-habits" class="tab-content">
+      <div class="card">
+        <div class="card-title">Habit tracker</div>
+        <div class="item-list" id="habits-tracker-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Manage habits</div>
+        <div style="display:flex; gap:8px; margin-bottom: 12px;">
+          <input type="text" id="habit-input" placeholder="Nayi habit" style="flex:1; padding:10px; border-radius:10px; border:1px solid var(--border-color); background:var(--card-inner); color:white;">
+          <button class="btn-orange" onclick="addHabit()">Add</button>
+        </div>
+        <div class="item-list" id="habits-manage-list"></div>
+      </div>
+    </div>
+
+    <div id="tab-screen" class="tab-content">
+      <div class="card" style="text-align: center;">
+        <div class="card-title" style="justify-content: center;">Screen time</div>
+        <div style="font-size: 36px; font-weight: bold; margin: 10px 0;" id="total-screen-time">0h 0m</div>
+        <div style="font-size: 12px; color: var(--text-sub);" id="screen-time-left">Limit 2h 0m me se bacha</div>
+      </div>
+
+      <div class="card">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size:12px; color:var(--text-sub);">YouTube (min)</label>
+            <input type="number" value="0" id="yt-time" onchange="updateScreenTime()" style="width:100%; padding:10px; margin-top:4px; border-radius:10px; background:var(--card-inner); border:1px solid var(--border-color); color:white;">
+          </div>
+          <div>
+            <label style="font-size:12px; color:var(--text-sub);">WhatsApp (min)</label>
+            <input type="number" value="0" id="wa-time" onchange="updateScreenTime()" style="width:100%; padding:10px; margin-top:4px; border-radius:10px; background:var(--card-inner); border:1px solid var(--border-color); color:white;">
+          </div>
+          <div>
+            <label style="font-size:12px; color:var(--text-sub);">Instagram (min)</label>
+            <input type="number" value="0" id="insta-time" onchange="updateScreenTime()" style="width:100%; padding:10px; margin-top:4px; border-radius:10px; background:var(--card-inner); border:1px solid var(--border-color); color:white;">
+          </div>
+          <div>
+            <label style="font-size:12px; color:var(--text-sub);">Other (min)</label>
+            <input type="number" value="0" id="other-time" onchange="updateScreenTime()" style="width:100%; padding:10px; margin-top:4px; border-radius:10px; background:var(--card-inner); border:1px solid var(--border-color); color:white;">
+          </div>
+        </div>
+        <div style="margin-top: 12px;">
+          <label style="font-size:12px; color:var(--text-sub);">Daily limit (min)</label>
+          <input type="number" value="120" id="limit-time" onchange="updateScreenTime()" style="width:100%; padding:10px; margin-top:4px; border-radius:10px; background:var(--card-inner); border:1px solid var(--border-color); color:white;">
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-journey" class="tab-content">
+      <div class="card">
+        <div class="card-title">Journey</div>
+        <div class="journey-grid" id="journey-dots"></div>
+      </div>
+    </div>
+
+    <div id="tab-backup" class="tab-content">
+      <div class="card">
+        <div class="card-title">Start date</div>
+        <input type="date" id="start-date-picker" style="width: 100%; padding: 12px; background: var(--card-inner); border: 1px solid var(--border-color); color: white; border-radius: 10px; margin-bottom: 10px;">
+        <button class="btn-purple" onclick="saveStartDate()">Date save karo</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="color: #ef4444;">Reset</div>
+        <button class="btn-danger" onclick="resetAllData()">Reset all data</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="navbar">
+    <div class="nav-item active" onclick="switchTab('today', this)"><i data-lucide="home"></i><span>Today</span></div>
+    <div class="nav-item" onclick="switchTab('habits', this)"><i data-lucide="layout-grid"></i><span>Habits</span></div>
+    <div class="nav-item" onclick="switchTab('screen', this)"><i data-lucide="smartphone"></i><span>Screen</span></div>
+    <div class="nav-item" onclick="switchTab('journey', this)"><i data-lucide="link"></i><span>Journey</span></div>
+    <div class="nav-item" onclick="switchTab('backup', this)"><i data-lucide="download"></i><span>Backup</span></div>
+  </div>  <script>
+    let appData = JSON.parse(localStorage.getItem('50day_app_data')) || {
+      startDate: new Date().toISOString().split('T')[0],
+      routines: [
+        { id: 1, time: '05:30', title: 'Wake up + water', done: false },
+        { id: 2, time: '06:00-07:30', title: 'Deep study', done: false },
+        { id: 3, time: '07:30-08:30', title: 'Breakfast & get ready', done: false },
+        { id: 4, time: '09:00-10:00', title: 'Focus block', done: false },
+        { id: 5, time: '10:00-10:30', title: 'Walk / stretch', done: false },
+        { id: 6, time: '18:00-19:00', title: 'Code / project time', done: false },
+        { id: 7, time: '22:00', title: 'Sleep', done: false }
+      ],
+      todos: [],
+      habits: ['Study', 'Exercise / Walk', 'No distraction', 'Reading', 'Sleep on time'],
+      habitLogs: {},
+      screenTime: { yt: 0, wa: 0, insta: 0, other: 0, limit: 120 }
+    };
+
+    let selectedDay = 1;
+
+    function saveState() {
+      localStorage.setItem('50day_app_data', JSON.stringify(appData));
+      render();
+    }
+
+    function getCalculatedDay() {
+      const start = new Date(appData.startDate);
+      const today = new Date();
+      const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+      return diffDays > 0 ? diffDays : 1;
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      el.classList.add('active');
+    }
+
+    function render() {
+      const currentDay = getCalculatedDay();
+      document.getElementById('current-day-num').innerText = selectedDay;
+      document.querySelectorAll('.dyn-day').forEach(el => el.innerText = selectedDay);
+
+      const options = { weekday: 'long', day: 'numeric', month: 'long' };
+      document.getElementById('current-date-text').innerText = new Date().toLocaleDateString('en-US', options);
+
+      const carousel = document.getElementById('days-carousel');
+      carousel.innerHTML = '';
+      for (let i = 1; i <= 50; i++) {
+        const pill = document.createElement('div');
+        pill.className = `day-pill ${i === selectedDay ? 'active' : ''}`;
+        pill.innerText = i;
+        pill.onclick = () => { selectedDay = i; render(); };
+        carousel.appendChild(pill);
+      }
+
+      const routineContainer = document.getElementById('routine-list');
+      routineContainer.innerHTML = '';
+      appData.routines.forEach((r, idx) => {
+        routineContainer.innerHTML += `
+          <div class="list-row">
+            <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleRoutine(${idx})">
+            <span style="font-size:12px; color:var(--text-sub); width:80px;">${r.time}</span>
+            <span style="flex:1; ${r.done ? 'text-decoration:line-through; color:gray;' : ''}">${r.title}</span>
+            <span style="color:#ef4444; cursor:pointer;" onclick="deleteRoutine(${idx})">&times;</span>
+          </div>
+        `;
+      });
+
+      const todoContainer = document.getElementById('todo-list');
+      todoContainer.innerHTML = '';
+      (appData.todos[selectedDay] || []).forEach((t, idx) => {
+        todoContainer.innerHTML += `
+          <div class="list-row">
+            <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo(${idx})">
+            <span style="flex:1; ${t.done ? 'text-decoration:line-through; color:gray;' : ''}">${t.text}</span>
+            <span style="color:#ef4444; cursor:pointer;" onclick="deleteTodo(${idx})">&times;</span>
+          </div>
+        `;
+      });
+
+      const habitTrack = document.getElementById('habits-tracker-list');
+      const habitManage = document.getElementById('habits-manage-list');
+      habitTrack.innerHTML = ''; habitManage.innerHTML = '';
+
+      appData.habits.forEach((h, idx) => {
+        const isDone = appData.habitLogs[`${selectedDay}_${idx}`];
+        habitTrack.innerHTML += `<div class="list-row" onclick="toggleHabit(${idx})"><input type="checkbox" ${isDone ? 'checked' : ''}><span style="flex:1">${h}</span></div>`;
+        habitManage.innerHTML += `<div class="list-row"><span style="flex:1">${h}</span><span style="color:#ef4444; cursor:pointer;" onclick="deleteHabit(${idx})">&times;</span></div>`;
+      });
+
+      const journeyGrid = document.getElementById('journey-dots');
+      journeyGrid.innerHTML = '';
+      for (let i = 1; i <= 50; i++) {
+        journeyGrid.innerHTML += `<div class="dot ${i <= currentDay ? 'filled' : ''}">${i}</div>`;
+      }
+
+      document.getElementById('start-date-picker').value = appData.startDate;
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const routineDone = appData.routines.filter(r => r.done).length;
+      const routineScore = appData.routines.length ? Math.round((routineDone / appData.routines.length) * 100) : 0;
+      
+      const currentTodos = appData.todos[selectedDay] || [];
+      const todoDone = currentTodos.filter(t => t.done).length;
+      const todoScore = currentTodos.length ? Math.round((todoDone / currentTodos.length) * 100) : 0;
+
+      document.getElementById('stat-routine').innerText = `${routineScore}%`;
+      document.getElementById('stat-todo').innerText = `${todoScore}%`;
+
+      const overall = Math.round((routineScore + todoScore) / 2);
+      document.getElementById('main-progress-text').innerText = `${overall}%`;
+
+      const circle = document.getElementById('main-progress-bar');
+      circle.style.strokeDashoffset = 226 - (226 * overall) / 100;
+    }
+
+    function toggleRoutine(idx) { appData.routines[idx].done = !appData.routines[idx].done; saveState(); }
+    function deleteRoutine(idx) { appData.routines.splice(idx, 1); saveState(); }
+    function addRoutineItem() {
+      const title = prompt('Enter Routine Title:');
+      const time = prompt('Enter Time (e.g. 06:00):');
+      if (title) { appData.routines.push({ id: Date.now(), time: time || '00:00', title, done: false }); saveState(); }
+    }
+
+    function addTodo() {
+      const input = document.getElementById('todo-input');
+      if (!input.value.trim()) return;
+      if (!appData.todos[selectedDay]) appData.todos[selectedDay] = [];
+      appData.todos[selectedDay].push({ text: input.value, done: false });
+      input.value = '';
+      saveState();
+    }
+    function toggleTodo(idx) { appData.todos[selectedDay][idx].done = !appData.todos[selectedDay][idx].done; saveState(); }
+    function deleteTodo(idx) { appData.todos[selectedDay].splice(idx, 1); saveState(); }
+
+    function addHabit() {
+      const input = document.getElementById('habit-input');
+      if (!input.value.trim()) return;
+      appData.habits.push(input.value);
+      input.value = '';
+      saveState();
+    }
+    function deleteHabit(idx) { appData.habits.splice(idx, 1); saveState(); }
+    function toggleHabit(idx) {
+      const key = `${selectedDay}_${idx}`;
+      appData.habitLogs[key] = !appData.habitLogs[key];
+      saveState();
+    }
+
+    function updateScreenTime() {
+      const yt = parseInt(document.getElementById('yt-time').value) || 0;
+      const wa = parseInt(document.getElementById('wa-time').value) || 0;
+      const insta = parseInt(document.getElementById('insta-time').value) || 0;
+      const other = parseInt(document.getElementById('other-time').value) || 0;
+      const limit = parseInt(document.getElementById('limit-time').value) || 120;
+
+      const total = yt + wa + insta + other;
+      document.getElementById('total-screen-time').innerText = `${Math.floor(total/60)}h ${total%60}m`;
+      document.getElementById('screen-time-left').innerText = `Limit ${Math.floor(limit/60)}h ${limit%60}m me se ${Math.max(0, limit - total)}m bacha`;
+    }
+
+    function saveStartDate() {
+      appData.startDate = document.getElementById('start-date-picker').value;
+      saveState();
+      alert('Start date updated!');
+    }
+
+    function resetAllData() {
+      if (confirm('Data reset karein?')) {
+        localStorage.removeItem('50day_app_data');
+        location.reload();
+      }
+    }
+
+    lucide.createIcons();
+    render();
+  </script>
+</body>
+</html>
